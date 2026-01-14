@@ -50,10 +50,11 @@ $projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
     }
 }
 
-# Delete azd environment folder
+# Delete azd environment folder (stop logging first to release file lock)
 if ($envName) {
     $envFolder = Join-Path $projectRoot ".azure" $envName
     if (Test-Path $envFolder) {
+        Stop-HookLog  # Release log file before deleting folder
         Remove-Item $envFolder -Recurse -Force
         Write-Host "[OK] Deleted .azure/$envName" -ForegroundColor Green
     }
@@ -66,8 +67,3 @@ if ($env:CLEAN_DOCKER_IMAGES -eq "true" -and (Get-Command docker -EA SilentlyCon
 }
 
 Write-Host "[OK] Cleanup complete. Run 'azd up' to redeploy." -ForegroundColor Green
-
-if ($script:HookLogFile) {
-    Write-Host "[LOG] Log file: $script:HookLogFile" -ForegroundColor DarkGray
-}
-Stop-HookLog
