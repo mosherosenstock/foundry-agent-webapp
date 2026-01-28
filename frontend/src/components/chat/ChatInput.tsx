@@ -56,7 +56,6 @@ const focusInput = (containerRef: React.RefObject<HTMLDivElement | null>) => {
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSubmit,
   disabled = false,
-  placeholder = "Escribe tu mensaje aquí...",
   onOpenSettings,
   onNewChat,
   hasMessages = false,

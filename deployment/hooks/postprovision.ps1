@@ -26,32 +26,34 @@ if (-not $containerAppUrl) {
 
 Write-Host "[OK] Container App: $containerAppUrl" -ForegroundColor Green
 
-# Update Entra app redirect URIs
-$app = az ad app show --id $clientId | ConvertFrom-Json
-$redirectUris = @(
-    "http://localhost:8080",
-    "http://localhost:5173",
-    $containerAppUrl
-)
+# Update Entra app redirect URIs (SKIPPED - Public app without authentication)
+# $app = az ad app show --id $clientId | ConvertFrom-Json
+# $redirectUris = @(
+#     "http://localhost:8080",
+#     "http://localhost:5173",
+#     $containerAppUrl
+# )
+# 
+# $spaBody = @{ spa = @{ redirectUris = $redirectUris } } | ConvertTo-Json -Depth 10
+# $tempFile = [System.IO.Path]::GetTempFileName()
+# $spaBody | Out-File -FilePath $tempFile -Encoding utf8
+# 
+# az rest --method PATCH `
+#     --uri "https://graph.microsoft.com/v1.0/applications/$($app.id)" `
+#     --headers "Content-Type=application/json" `
+#     --body "@$tempFile" | Out-Null
+# 
+# Remove-Item $tempFile -EA SilentlyContinue
+# 
+# if ($LASTEXITCODE -ne 0) {
+#     Write-Host "[ERROR] Failed to update Entra app" -ForegroundColor Red
+#     exit 1
+# }
+# 
+# Write-Host "[OK] Redirect URIs updated" -ForegroundColor Green
+# $redirectUris | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 
-$spaBody = @{ spa = @{ redirectUris = $redirectUris } } | ConvertTo-Json -Depth 10
-$tempFile = [System.IO.Path]::GetTempFileName()
-$spaBody | Out-File -FilePath $tempFile -Encoding utf8
-
-az rest --method PATCH `
-    --uri "https://graph.microsoft.com/v1.0/applications/$($app.id)" `
-    --headers "Content-Type=application/json" `
-    --body "@$tempFile" | Out-Null
-
-Remove-Item $tempFile -EA SilentlyContinue
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to update Entra app" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "[OK] Redirect URIs updated" -ForegroundColor Green
-$redirectUris | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+Write-Host "[SKIP] Entra app redirect URI update (public app without authentication)" -ForegroundColor Yellow
 
 # Assign Cognitive Services User role to web managed identity on AI Foundry resource
 # This is done via Azure CLI (not Bicep) to prevent azd from tracking the external resource group

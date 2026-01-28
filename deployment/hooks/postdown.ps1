@@ -28,14 +28,15 @@ if ($webIdentityPrincipalId -and $aiFoundryResourceGroup -and $aiFoundryResource
     Write-Host "[OK] Role assignment removed (if it existed)" -ForegroundColor Green
 }
 
-# Delete Entra app
-if ($envName) {
-    $clientId = azd env get-value ENTRA_SPA_CLIENT_ID 2>$null
-    if ($clientId) {
-        az ad app delete --id $clientId 2>&1 | Out-Null
-        Write-Host "[OK] Entra app deleted: $clientId" -ForegroundColor Green
-    }
-}
+# Delete Entra app (SKIPPED - No app created for public app)
+# if ($envName) {
+#     $clientId = azd env get-value ENTRA_SPA_CLIENT_ID 2>$null
+#     if ($clientId) {
+#         az ad app delete --id $clientId 2>&1 | Out-Null
+#         Write-Host "[OK] Entra app deleted: $clientId" -ForegroundColor Green
+#     }
+# }
+Write-Host "[SKIP] Entra app deletion (no app was created)" -ForegroundColor Yellow
 
 # Delete local config files
 $projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent

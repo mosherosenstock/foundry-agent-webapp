@@ -18,17 +18,9 @@ interface IStarterMessageProps {
   onPromptClick?: (prompt: string) => void;
 }
 
-// Default starter prompts when none are configured in Azure AI Foundry
-const defaultStarterPrompts = [
-  "How can you help me?",
-  "What are your capabilities?",
-  "Tell me about yourself",
-];
-
 export const StarterMessages = ({
   agentName,
   agentDescription,
-  agentLogo,
   starterPrompts,
   onPromptClick,
 }: IStarterMessageProps): ReactNode => {

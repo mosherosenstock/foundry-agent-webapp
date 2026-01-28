@@ -1,5 +1,5 @@
 import { Suspense, memo, useMemo, useCallback } from 'react';
-import { Spinner, Tooltip, Body1, Subtitle1 } from '@fluentui/react-components';
+import { Spinner, Tooltip } from '@fluentui/react-components';
 import { CopilotMessage } from '@fluentui-copilot/react-copilot-chat';
 import { DocumentRegular, GlobeRegular, FolderRegular, OpenRegular } from '@fluentui/react-icons';
 import { Markdown } from '../core/Markdown';
@@ -20,7 +20,6 @@ interface AssistantMessageProps {
 function AssistantMessageComponent({ 
   message, 
   agentName = 'AI Assistant',
-  agentLogo,
   isStreaming = false,
 }: AssistantMessageProps) {
   const formatTimestamp = useFormatTimestamp();

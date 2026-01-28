@@ -41,21 +41,27 @@ Write-Host "[OK] Tenant: $tenantId" -ForegroundColor Green
 
 Write-Host "[OK] Environment: $envName" -ForegroundColor Green
 
-# Create app registration
-$appName = "ai-foundry-agent-$envName"
-Write-Host "Creating app registration..." -ForegroundColor Cyan
+# Create app registration (SKIPPED - Public app without authentication)
+# $appName = "ai-foundry-agent-$envName"
+# Write-Host "Creating app registration..." -ForegroundColor Cyan
+# 
+# $params = @{ AppName = $appName; TenantId = $tenantId }
+# $smr = $env:ENTRA_SERVICE_MANAGEMENT_REFERENCE
+# if (-not [string]::IsNullOrWhiteSpace($smr)) { $params.ServiceManagementReference = $smr }
+# 
+# $clientId = & "$PSScriptRoot/modules/New-EntraAppRegistration.ps1" @params
+# if (-not $clientId) {
+#     Write-Host "[ERROR] App registration failed. See deployment/hooks/README.md" -ForegroundColor Red
+#     exit 1
+# }
+# azd env set ENTRA_SPA_CLIENT_ID $clientId
+# Write-Host "[OK] Client ID: $clientId" -ForegroundColor Green
 
-$params = @{ AppName = $appName; TenantId = $tenantId }
-$smr = $env:ENTRA_SERVICE_MANAGEMENT_REFERENCE
-if (-not [string]::IsNullOrWhiteSpace($smr)) { $params.ServiceManagementReference = $smr }
-
-$clientId = & "$PSScriptRoot/modules/New-EntraAppRegistration.ps1" @params
-if (-not $clientId) {
-    Write-Host "[ERROR] App registration failed. See deployment/hooks/README.md" -ForegroundColor Red
-    exit 1
-}
+Write-Host "[SKIP] Entra ID app creation (public app without authentication)" -ForegroundColor Yellow
+$clientId = "public"
 azd env set ENTRA_SPA_CLIENT_ID $clientId
-Write-Host "[OK] Client ID: $clientId" -ForegroundColor Green
+azd env set ENTRA_TENANT_ID $tenantId
+Write-Host "[OK] Using dummy values for build (not used at runtime)" -ForegroundColor Green
 
 # Discover AI Foundry resources
 Write-Host "Discovering AI Foundry resources..." -ForegroundColor Cyan
@@ -162,20 +168,17 @@ if ([string]::IsNullOrWhiteSpace($agentId)) {
 $aiAgentEndpoint = (azd env get-value AI_AGENT_ENDPOINT 2>&1) | Where-Object { $_ -notmatch 'ERROR' } | Select-Object -First 1
 $aiAgentId = (azd env get-value AI_AGENT_ID 2>&1) | Where-Object { $_ -notmatch 'ERROR' } | Select-Object -First 1
 
-# Frontend .env.local
+# Frontend .env.local (dummy values for build compatibility)
 @"
 # Auto-generated - Do not commit
+# These values are dummy placeholders for build-time compatibility
 VITE_ENTRA_SPA_CLIENT_ID=$clientId
 VITE_ENTRA_TENANT_ID=$tenantId
 "@ | Out-File -FilePath "frontend/.env.local" -Encoding utf8 -Force
 
-# Backend .env
+# Backend .env (no authentication variables needed)
 @"
 # Auto-generated - Do not commit
-AzureAd__Instance=https://login.microsoftonline.com/
-AzureAd__TenantId=$tenantId
-AzureAd__ClientId=$clientId
-AzureAd__Audience=api://$clientId
 AI_AGENT_ENDPOINT=$aiAgentEndpoint
 AI_AGENT_ID=$aiAgentId
 "@ | Out-File -FilePath "backend/WebApp.Api/.env" -Encoding utf8 -Force
