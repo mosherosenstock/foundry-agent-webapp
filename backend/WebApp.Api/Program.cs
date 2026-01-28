@@ -5,21 +5,21 @@ using WebApp.Api.Services;
 using System.Security.Claims;
 
 // Load .env file for local development BEFORE building the configuration
-// In production (Docker), Container Apps injects environment variables directly
-var currentDir = Directory.GetCurrentDirectory();
-var envFilePath = Path.Combine(currentDir, ".env");
-
-// If not found in current directory, look in parent (solution root)
-if (!File.Exists(envFilePath))
+// Search up the directory tree for .env starting from current directory
+var envFilePath = "";
+var searchDir = new DirectoryInfo(Directory.GetCurrentDirectory());
+while (searchDir != null)
 {
-    var parentDir = Directory.GetParent(currentDir)?.FullName;
-    if (parentDir != null)
+    var potentialPath = Path.Combine(searchDir.FullName, ".env");
+    if (File.Exists(potentialPath))
     {
-        envFilePath = Path.Combine(parentDir, ".env");
+        envFilePath = potentialPath;
+        break;
     }
+    searchDir = searchDir.Parent;
 }
 
-if (File.Exists(envFilePath))
+if (!string.IsNullOrEmpty(envFilePath))
 {
     foreach (var line in File.ReadAllLines(envFilePath))
     {
@@ -30,9 +30,8 @@ if (File.Exists(envFilePath))
         if (parts.Length == 2)
         {
             var key = parts[0];
-            var value = parts[1].Trim('"'); // Remove quotes if present
+            var value = parts[1].Trim('"').Trim('\''); // Remove quotes
             
-            // Set as environment variables
             Environment.SetEnvironmentVariable(key, value);
         }
     }
@@ -40,14 +39,16 @@ if (File.Exists(envFilePath))
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Map Azure Foundry variables to app settings if they exist in environment
-var aiEndpoint = Environment.GetEnvironmentVariable("AZURE_EXISTING_AIPROJECT_ENDPOINT");
+// Explicitly override placeholders with environment variables if they exist
+var aiEndpoint = Environment.GetEnvironmentVariable("AZURE_EXISTING_AIPROJECT_ENDPOINT") 
+                ?? Environment.GetEnvironmentVariable("AI_AGENT_ENDPOINT");
 if (!string.IsNullOrEmpty(aiEndpoint))
 {
     builder.Configuration["AI_AGENT_ENDPOINT"] = aiEndpoint;
 }
 
-var aiAgentId = Environment.GetEnvironmentVariable("AZURE_EXISTING_AGENT_ID");
+var aiAgentId = Environment.GetEnvironmentVariable("AZURE_EXISTING_AGENT_ID")
+               ?? Environment.GetEnvironmentVariable("AI_AGENT_ID");
 if (!string.IsNullOrEmpty(aiAgentId))
 {
     builder.Configuration["AI_AGENT_ID"] = aiAgentId;
