@@ -6,7 +6,19 @@ using System.Security.Claims;
 
 // Load .env file for local development BEFORE building the configuration
 // In production (Docker), Container Apps injects environment variables directly
-var envFilePath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+var currentDir = Directory.GetCurrentDirectory();
+var envFilePath = Path.Combine(currentDir, ".env");
+
+// If not found in current directory, look in parent (solution root)
+if (!File.Exists(envFilePath))
+{
+    var parentDir = Directory.GetParent(currentDir)?.FullName;
+    if (parentDir != null)
+    {
+        envFilePath = Path.Combine(parentDir, ".env");
+    }
+}
+
 if (File.Exists(envFilePath))
 {
     foreach (var line in File.ReadAllLines(envFilePath))
@@ -17,13 +29,30 @@ if (File.Exists(envFilePath))
         var parts = line.Split('=', 2, StringSplitOptions.TrimEntries);
         if (parts.Length == 2)
         {
-            // Set as environment variables so they're picked up by configuration system
-            Environment.SetEnvironmentVariable(parts[0], parts[1]);
+            var key = parts[0];
+            var value = parts[1].Trim('"'); // Remove quotes if present
+            
+            // Set as environment variables
+            Environment.SetEnvironmentVariable(key, value);
         }
     }
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Map Azure Foundry variables to app settings if they exist in environment
+var aiEndpoint = Environment.GetEnvironmentVariable("AZURE_EXISTING_AIPROJECT_ENDPOINT");
+if (!string.IsNullOrEmpty(aiEndpoint))
+{
+    builder.Configuration["AI_AGENT_ENDPOINT"] = aiEndpoint;
+}
+
+var aiAgentId = Environment.GetEnvironmentVariable("AZURE_EXISTING_AGENT_ID");
+if (!string.IsNullOrEmpty(aiAgentId))
+{
+    builder.Configuration["AI_AGENT_ID"] = aiAgentId;
+}
+
 
 // Enable PII logging for debugging auth issues (ONLY IN DEVELOPMENT)
 if (builder.Environment.IsDevelopment())
@@ -351,7 +380,6 @@ app.MapGet("/api/agent", async (
         );
     }
 })
-.RequireAuthorization(ScopePolicyName)
 .WithName("GetAgentMetadata");
 
 // Get agent info (for debugging)
