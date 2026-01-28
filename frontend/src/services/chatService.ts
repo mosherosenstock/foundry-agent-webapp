@@ -39,7 +39,6 @@ import { parseSseLine, splitSseBuffer } from '../utils/sseParser';
  */
 export class ChatService {
   private apiUrl: string;
-  private getAccessToken: () => Promise<string | null>;
   private dispatch: Dispatch<AppAction>;
   private currentStreamAbort?: AbortController;
   // Flag indicating an intentional user cancellation of the active stream.
@@ -47,11 +46,9 @@ export class ChatService {
 
   constructor(
     apiUrl: string,
-    getAccessToken: () => Promise<string | null>,
     dispatch: Dispatch<AppAction>
   ) {
     this.apiUrl = apiUrl;
-    this.getAccessToken = getAccessToken;
     this.dispatch = dispatch;
   }
 
@@ -154,7 +151,6 @@ export class ChatService {
    */
   private async initiateStream(
     url: string,
-    token: string,
     body: Record<string, any>,
     signal: AbortSignal
   ): Promise<Response> {
@@ -162,7 +158,6 @@ export class ChatService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
       signal,
@@ -202,7 +197,6 @@ export class ChatService {
     }
 
     try {
-      const token = await this.ensureAuthToken();
       const { content, imageDataUris, fileDataUris, attachments } = await this.prepareMessagePayload(
         messageText,
         files
@@ -242,7 +236,6 @@ export class ChatService {
         async () =>
           this.initiateStream(
             `${this.apiUrl}/chat/stream`,
-            token,
             requestBody,
             this.currentStreamAbort!.signal
           ),
@@ -444,8 +437,6 @@ export class ChatService {
     conversationId: string
   ): Promise<void> {
     try {
-      const token = await this.ensureAuthToken();
-
       const assistantMessageId = Date.now().toString();
       this.dispatch({ type: 'CHAT_ADD_ASSISTANT_MESSAGE', messageId: assistantMessageId });
       this.dispatch({
@@ -471,7 +462,6 @@ export class ChatService {
         async () =>
           this.initiateStream(
             `${this.apiUrl}/chat/stream`,
-            token,
             requestBody,
             this.currentStreamAbort!.signal
           ),

@@ -2,23 +2,9 @@ import type { Configuration } from "@azure/msal-browser";
 import { LogLevel } from "@azure/msal-browser";
 
 // Environment variables (must be set during build or deployment)
-const clientId = import.meta.env.VITE_ENTRA_SPA_CLIENT_ID;
+const clientId = import.meta.env.VITE_ENTRA_SPA_CLIENT_ID || "public";
 
-if (!clientId) {
-  throw new Error(
-    "VITE_ENTRA_SPA_CLIENT_ID is not set. This must be provided during build time. " +
-    "For local dev, ensure azd environment is configured and run preprovision hook."
-  );
-}
-
-const tenantId = import.meta.env.VITE_ENTRA_TENANT_ID;
-
-if (!tenantId) {
-  throw new Error(
-    "VITE_ENTRA_TENANT_ID is not set. This must be provided during build time. " +
-    "For local dev, run setup-local-dev.ps1 to configure from azd environment."
-  );
-}
+const tenantId = import.meta.env.VITE_ENTRA_TENANT_ID || "public";
 
 export const msalConfig: Configuration = {
   auth: {

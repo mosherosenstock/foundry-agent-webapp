@@ -66,12 +66,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [state, dispatch] = useReducer(reducerWithLogging, initialAppState);
   const { accounts } = useMsal();
 
-  // Initialize auth state from MSAL
+  // Initialize auth state
   useEffect(() => {
-    if (accounts.length > 0) {
-      dispatch({ type: 'AUTH_INITIALIZED', user: accounts[0] });
-    }
-  }, [accounts]);
+    dispatch({ type: 'AUTH_INITIALIZED', user: { name: 'Public User' } as any });
+  }, []);
 
   // Dev mode: Log when provider mounts and unmounts
   useEffect(() => {

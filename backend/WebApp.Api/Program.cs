@@ -148,25 +148,15 @@ app.UseCors("AllowFrontend");
 // Note: HTTPS redirection not needed - Azure Container Apps handles SSL termination at ingress
 // The container receives HTTP traffic on port 8080
 
-// Add authentication and authorization middleware
-app.UseAuthentication();
-app.UseAuthorization();
-
 // Authenticated health endpoint exposes caller identity
-app.MapGet("/api/health", (HttpContext context) =>
+app.MapGet("/api/health", () =>
 {
-    var userId = context.User.FindFirst("oid")?.Value ?? "unknown";
-    var userName = context.User.FindFirst("name")?.Value ?? "unknown";
-
     return Results.Ok(new
     {
         status = "healthy",
-        timestamp = DateTime.UtcNow,
-        authenticated = true,
-        user = new { id = userId, name = userName }
+        timestamp = DateTime.UtcNow
     });
 })
-.RequireAuthorization(ScopePolicyName)
 .WithName("GetHealth");
 
 // Streaming Chat endpoint: Streams agent response via SSE (conversationId → chunks → usage → done)
@@ -252,7 +242,6 @@ app.MapPost("/api/chat/stream", async (
             cancellationToken);
     }
 })
-.RequireAuthorization(ScopePolicyName)
 .WithName("StreamChatMessage");
 
 static async Task WriteConversationIdEvent(HttpResponse response, string conversationId, CancellationToken ct)
@@ -395,7 +384,6 @@ app.MapGet("/api/agent/info", async (
         );
     }
 })
-.RequireAuthorization(ScopePolicyName)
 .WithName("GetAgentInfo");
 
 // Fallback route for SPA - serve index.html for any non-API routes
