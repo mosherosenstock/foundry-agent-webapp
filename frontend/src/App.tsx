@@ -25,10 +25,13 @@ function App() {
       }
 
       const data = await response.json();
+      // Override technical agent ID with display name
+      data.name = 'Agente Cotizador de Cocinas';
+      data.description = data.description || 'Tu compañero inteligente de conversación';
       setAgentMetadata(data);
       
       // Update document title with agent name
-      document.title = data.name ? `${data.name} - Azure AI Agent` : 'Azure AI Agent';
+      document.title = 'Agente Cotizador de Cocinas';
     } catch (error) {
       console.error('Error fetching agent metadata:', error);
       // Fallback data keeps UI functional on error
@@ -36,12 +39,12 @@ function App() {
         id: 'fallback-agent',
         object: 'agent',
         createdAt: Date.now() / 1000,
-        name: 'Agente Costeo Cocinas',
+        name: 'Agente Cotizador de Cocinas',
         description: 'Tu compañero inteligente de conversación',
         model: 'gpt-4o-mini',
         metadata: { logo: 'Avatar_Default.svg' }
       });
-      document.title = 'Agente Costeo Cocinas';
+      document.title = 'Agente Cotizador de Cocinas';
     } finally {
       setIsLoadingAgent(false);
     }
