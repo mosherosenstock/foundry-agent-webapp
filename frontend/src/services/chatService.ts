@@ -53,21 +53,6 @@ export class ChatService {
   }
 
   /**
-   * Acquire authentication token using MSAL.
-   * Attempts silent acquisition first, falls back to popup if needed.
-   * 
-   * @returns Access token string
-   * @throws {Error} If token acquisition fails
-   */
-  private async ensureAuthToken(): Promise<string> {
-    const token = await this.getAccessToken();
-    if (!token) {
-      throw createAppError(new Error('Failed to acquire access token'), 'AUTH');
-    }
-    return token;
-  }
-
-  /**
    * Prepare message payload with optional file attachments.
    * Converts files to data URIs and separates images from documents.
    * 
