@@ -36,12 +36,12 @@ function App() {
         id: 'fallback-agent',
         object: 'agent',
         createdAt: Date.now() / 1000,
-        name: 'Azure AI Agent',
+        name: 'Agente Costeo Cocinas',
         description: 'Your intelligent conversational partner powered by Azure AI',
         model: 'gpt-4o-mini',
         metadata: { logo: 'Avatar_Default.svg' }
       });
-      document.title = 'Azure AI Agent';
+      document.title = 'Agente Costeo Cocinas';
     } finally {
       setIsLoadingAgent(false);
     }

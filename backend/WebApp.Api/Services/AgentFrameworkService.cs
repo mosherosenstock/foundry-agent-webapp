@@ -657,7 +657,7 @@ public class AgentFrameworkService : IDisposable
             Id = _agentId,
             Object = "agent",
             CreatedAt = agentVersion.CreatedAt.ToUnixTimeSeconds(),
-            Name = agentVersion.Name ?? "AI Assistant",
+            Name = agentVersion.Name ?? "Agente Costeo Cocinas",
             Description = agentVersion.Description,
             Model = definition?.Model ?? string.Empty,
             Instructions = definition?.Instructions ?? string.Empty,
@@ -710,7 +710,7 @@ public class AgentFrameworkService : IDisposable
 
         var agent = await GetAgentAsync(cancellationToken);
         var agentVersion = agent.GetService<AgentVersion>();
-        return agentVersion?.Name ?? _agentId;
+        return agentVersion?.Name ?? "Agente Costeo Cocinas";
     }
 
     /// <summary>

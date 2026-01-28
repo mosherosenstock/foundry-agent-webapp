@@ -293,6 +293,7 @@ export class ChatService {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
+        console.log('[ChatService] Received raw chunk:', chunk);
         buffer += chunk;
 
         const [lines, remaining] = splitSseBuffer(buffer);

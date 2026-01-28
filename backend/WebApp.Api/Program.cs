@@ -222,14 +222,17 @@ app.MapPost("/api/chat/stream", async (
         {
             if (chunk.IsText && chunk.TextDelta != null)
             {
+                Console.WriteLine($"[DEBUG] Sending chunk: {chunk.TextDelta.Length} chars");
                 await WriteChunkEvent(httpContext.Response, chunk.TextDelta, cancellationToken);
             }
             else if (chunk.HasAnnotations && chunk.Annotations != null)
             {
+                Console.WriteLine($"[DEBUG] Sending annotations: {chunk.Annotations.Count}");
                 await WriteAnnotationsEvent(httpContext.Response, chunk.Annotations, cancellationToken);
             }
             else if (chunk.IsMcpApprovalRequest && chunk.McpApprovalRequest != null)
             {
+                Console.WriteLine($"[DEBUG] Sending MCP approval request: {chunk.McpApprovalRequest.ToolName}");
                 await WriteMcpApprovalRequestEvent(httpContext.Response, chunk.McpApprovalRequest, cancellationToken);
             }
         }
