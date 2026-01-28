@@ -6,7 +6,6 @@ import { StarterMessages } from "./chat/StarterMessages";
 import { ChatInput } from "./chat/ChatInput";
 import { Waves } from "./animations/Waves";
 import { ErrorMessage } from "./core/ErrorMessage";
-import { BuiltWithBadge } from "./core/BuiltWithBadge";
 import type { IChatItem } from "../types/chat";
 import type { AppState } from "../types/appState";
 import type { AppError } from "../types/errors";
@@ -176,7 +175,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           isStreaming={isStreaming}
           onCancelStream={isStreaming && onCancelStream ? onCancelStream : undefined}
         />
-        <BuiltWithBadge className={styles.builtWithBadge} />
       </div>
     </div>
   );
