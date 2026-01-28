@@ -56,7 +56,7 @@ const focusInput = (containerRef: React.RefObject<HTMLDivElement | null>) => {
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSubmit,
   disabled = false,
-  placeholder = "Type your message...",
+  placeholder = "Escribe tu mensaje aquí...",
   onOpenSettings,
   onNewChat,
   hasMessages = false,
@@ -253,7 +253,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           history={true}
           onChange={(_, data) => setInputText(data.value)}
           onSubmit={handleSubmit}
-          placeholderValue={placeholder}
+          placeholderValue="Escribe tu mensaje aquí..."
         >
           <ImperativeControlPlugin ref={controlRef} />
         </ChatInputFluent>

@@ -149,7 +149,7 @@ function AssistantMessageComponent({
       name={agentName}
       loadingState="none"
       className={styles.copilotMessage}
-      disclaimer={<span>AI-generated content may be incorrect</span>}
+      disclaimer={<span>El contenido generado por IA puede ser incorrecto</span>}
       footnote={
         <div className={styles.footnoteContainer}>
           {hasAnnotations && !isStreaming && (

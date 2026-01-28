@@ -37,7 +37,7 @@ function App() {
         object: 'agent',
         createdAt: Date.now() / 1000,
         name: 'Agente Costeo Cocinas',
-        description: 'Your intelligent conversational partner powered by Azure AI',
+        description: 'Tu compañero inteligente de conversación',
         model: 'gpt-4o-mini',
         metadata: { logo: 'Avatar_Default.svg' }
       });

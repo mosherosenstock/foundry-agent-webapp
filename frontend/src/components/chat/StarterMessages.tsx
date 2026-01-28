@@ -35,21 +35,25 @@ export const StarterMessages = ({
   // Use agent-provided prompts or fall back to defaults
   const prompts = starterPrompts && starterPrompts.length > 0 
     ? starterPrompts 
-    : defaultStarterPrompts;
+    : [
+        "¿Cómo puedes ayudarme?",
+        "¿Cuáles son tus capacidades?",
+        "Cuéntame sobre ti",
+      ];
 
   return (
     <div className={styles.zeroprompt}>
       <div className={styles.content}>
         <AgentIcon
-          alt={agentName ?? "Agent"}
+          alt={agentName ?? "Agente"}
           size="large"
           logoUrl="/assets/logo.png"
         />
         <Subtitle1 className={styles.welcome}>
-          {agentName ? `Hello! I'm ${agentName}` : "Hello! How can I help you today?"}
+          {agentName ? `¡Hola! Soy ${agentName}` : "¡Hola! ¿Cómo puedo ayudarte hoy?"}
         </Subtitle1>
         {agentDescription && (
-          <Body1 className={styles.caption}>{agentDescription}</Body1>
+          <Body1 className={styles.caption}>Tu compañero inteligente de conversación</Body1>
         )}
       </div>
 
