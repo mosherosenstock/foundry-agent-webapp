@@ -1,5 +1,5 @@
 import { Suspense, memo, useMemo, useCallback } from 'react';
-import { Spinner, Tooltip } from '@fluentui/react-components';
+import { Spinner, Tooltip, Body1, Subtitle1 } from '@fluentui/react-components';
 import { CopilotMessage } from '@fluentui-copilot/react-copilot-chat';
 import { DocumentRegular, GlobeRegular, FolderRegular, OpenRegular } from '@fluentui/react-icons';
 import { Markdown } from '../core/Markdown';
@@ -145,7 +145,7 @@ function AssistantMessageComponent({
   return (
     <CopilotMessage
       id={`msg-${message.id}`}
-      avatar={<AgentIcon logoUrl={agentLogo} />}
+      avatar={<AgentIcon logoUrl="/assets/logo.png" />}
       name={agentName}
       loadingState="none"
       className={styles.copilotMessage}

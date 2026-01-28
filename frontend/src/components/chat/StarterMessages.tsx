@@ -39,6 +39,20 @@ export const StarterMessages = ({
 
   return (
     <div className={styles.zeroprompt}>
+      <div className={styles.content}>
+        <AgentIcon
+          alt={agentName ?? "Agent"}
+          size="large"
+          logoUrl="/assets/logo.png"
+        />
+        <Subtitle1 className={styles.welcome}>
+          {agentName ? `Hello! I'm ${agentName}` : "Hello! How can I help you today?"}
+        </Subtitle1>
+        {agentDescription && (
+          <Body1 className={styles.caption}>{agentDescription}</Body1>
+        )}
+      </div>
+
       {onPromptClick && (
         <ul className={styles.promptList}>
           {prompts.map((prompt, index) => (
