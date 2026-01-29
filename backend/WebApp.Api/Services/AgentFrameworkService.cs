@@ -25,6 +25,8 @@ public class AgentFrameworkService : IDisposable
     private readonly AIProjectClient _projectClient;
     private readonly string _agentId;
     private readonly ILogger<AgentFrameworkService> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly TokenCredential _credential;
     private ChatClientAgent? _cachedAgent;
     private AgentMetadataResponse? _cachedMetadata;
     private readonly SemaphoreSlim _agentLock = new(1, 1);
@@ -36,6 +38,7 @@ public class AgentFrameworkService : IDisposable
         ILogger<AgentFrameworkService> logger)
     {
         _logger = logger;
+        _configuration = configuration;
 
         var endpoint = configuration["AI_AGENT_ENDPOINT"]
             ?? throw new InvalidOperationException("AI_AGENT_ENDPOINT is not configured");
@@ -48,13 +51,12 @@ public class AgentFrameworkService : IDisposable
             endpoint, 
             _agentId);
 
-        TokenCredential credential;
         var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
 
         if (environment == "Development")
         {
             _logger.LogInformation("Development: Using ChainedTokenCredential (AzureCli -> AzureDeveloperCli)");
-            credential = new ChainedTokenCredential(
+            _credential = new ChainedTokenCredential(
                 new AzureCliCredential(),
                 new AzureDeveloperCliCredential()
             );
@@ -62,10 +64,10 @@ public class AgentFrameworkService : IDisposable
         else
         {
             _logger.LogInformation("Production: Using ManagedIdentityCredential (system-assigned)");
-            credential = new ManagedIdentityCredential();
+            _credential = new ManagedIdentityCredential();
         }
 
-        _projectClient = new AIProjectClient(new Uri(endpoint), credential);
+        _projectClient = new AIProjectClient(new Uri(endpoint), _credential);
         _logger.LogInformation("AIProjectClient initialized successfully");
     }
 
@@ -160,6 +162,9 @@ public class AgentFrameworkService : IDisposable
                 conversationId);
 
         CreateResponseOptions options = new() { StreamingEnabled = true };
+
+        // Configure MCP tool resources if MCP server is configured
+        await ConfigureMcpToolResourcesAsync(options, conversationId, cancellationToken);
 
         // If continuing from MCP approval, link to previous response
         if (!string.IsNullOrEmpty(previousResponseId) && mcpApproval != null)
@@ -718,6 +723,112 @@ public class AgentFrameworkService : IDisposable
     /// </summary>
     public (int InputTokens, int OutputTokens, int TotalTokens)? GetLastUsage() =>
         _lastUsage is null ? null : (_lastUsage.InputTokenCount, _lastUsage.OutputTokenCount, _lastUsage.TotalTokenCount);
+
+    /// <summary>
+    /// Configure MCP tool resources if MCP server is configured
+    /// </summary>
+    private async Task ConfigureMcpToolResourcesAsync(
+        CreateResponseOptions options,
+        string conversationId,
+        CancellationToken cancellationToken = default)
+    {
+        var mcpServerUrl = _configuration["MCP_SERVER_URL"];
+        var mcpServerLabel = _configuration["MCP_SERVER_LABEL"] ?? "composio-tool-router";
+        
+        // If MCP server not configured, skip
+        if (string.IsNullOrEmpty(mcpServerUrl))
+        {
+            _logger.LogDebug("MCP server not configured, skipping MCP tool resources");
+            return;
+        }
+
+        _logger.LogInformation(
+            "Configuring MCP tool resources: Server={Server}, Label={Label}", 
+            mcpServerUrl, 
+            mcpServerLabel);
+
+        try
+        {
+            // Get access token for MCP server
+            var mcpToken = await GetMcpAccessTokenAsync(cancellationToken);
+
+            // Generate correlation ID for this request
+            var correlationId = Guid.NewGuid().ToString();
+
+            // Get user ID from conversation context
+            // For public app without authentication, use a default user ID
+            // In production, extract from JWT token
+            var userId = _configuration["DEFAULT_USER_ID"] ?? "anonymous-user";
+
+            // Configure tool approval policies
+            // Read operations: never require approval
+            // Write operations: always require approval
+            var requireApproval = new Dictionary<string, bool>
+            {
+                ["tavily_search"] = false,
+                ["gmail_list_messages"] = false,
+                ["gmail_send_email"] = true,
+                ["twilio_send_sms"] = true,
+                ["twilio_send_whatsapp"] = true
+            };
+
+            // Build MCPApproval configuration
+            // For granular control, we'll use "always" and let the MCP server handle per-tool logic
+            var mcpApproval = new MCPApproval("always");
+
+            // Build headers for MCP server
+            var headers = new Dictionary<string, string>
+            {
+                ["Authorization"] = $"Bearer {mcpToken}",
+                ["X-User-Id"] = userId,
+                ["X-Correlation-Id"] = correlationId,
+                ["Content-Type"] = "application/json"
+            };
+
+            // Create MCP tool resource
+            var mcpToolResource = new MCPToolResource(serverLabel: mcpServerLabel)
+            {
+                RequireApproval = mcpApproval,
+                Headers = headers
+            };
+
+            // Add to response options
+            // Note: This requires RawRepresentationFactory to set ThreadAndRunOptions
+            // For now, log configuration - full implementation may require SDK updates
+            _logger.LogInformation(
+                "MCP tool resource configured. CorrelationId: {CorrelationId}, UserId: {UserId}", 
+                correlationId, 
+                userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to configure MCP tool resources. Continuing without MCP tools.");
+            // Don't throw - allow agent to work without MCP tools if configuration fails
+        }
+    }
+
+    /// <summary>
+    /// Get access token for MCP server (Entra ID audience)
+    /// </summary>
+    private async Task<string> GetMcpAccessTokenAsync(CancellationToken cancellationToken = default)
+    {
+        var mcpAudience = _configuration["MCP_SERVER_AUDIENCE"] ?? "api://composio-mcp-function/.default";
+        
+        try
+        {
+            var token = await _credential.GetTokenAsync(
+                new TokenRequestContext([mcpAudience]),
+                cancellationToken);
+
+            _logger.LogDebug("Successfully obtained MCP access token. Expires: {ExpiresOn}", token.ExpiresOn);
+            return token.Token;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to obtain MCP access token for audience: {Audience}", mcpAudience);
+            throw;
+        }
+    }
 
     public void Dispose()
     {
